@@ -7,6 +7,7 @@ import javax.transaction.Transactional;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -55,8 +56,10 @@ public class TopicosController {
 		}
 	}
 
-	@Transactional
+	
 	@PostMapping
+	@Transactional
+	@CacheEvict(value = "listaDeTopicos", allEntries = true)
 	public ResponseEntity<TopicoDto> cadastar(@RequestBody @Valid TopicoForm form, UriComponentsBuilder uriBuilder) {
 		Topico topico = form.converter(coursoRepository);
 		topicoRepository.save(topico);
@@ -73,6 +76,7 @@ public class TopicosController {
 				.orElse(ResponseEntity.notFound().build());
 	}
 
+
 	@Transactional
 	@PutMapping("/{id}")
 	public ResponseEntity<TopicoDto> atualizar(@PathVariable Long id, @RequestBody @Valid TopicoFormAtalizacao form) {
@@ -83,6 +87,7 @@ public class TopicosController {
 		}
 		return ResponseEntity.notFound().build();
 	}
+	
 
 	@Transactional
 	@DeleteMapping("/{id}")
