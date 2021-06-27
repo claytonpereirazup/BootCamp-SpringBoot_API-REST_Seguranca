@@ -79,6 +79,7 @@ public class TopicosController {
 
 	@Transactional
 	@PutMapping("/{id}")
+	@CacheEvict(value = "listaDeTopicos", allEntries = true)
 	public ResponseEntity<TopicoDto> atualizar(@PathVariable Long id, @RequestBody @Valid TopicoFormAtalizacao form) {
 		Optional<Topico> optional = topicoRepository.findById(id);
 		if (optional.isPresent()) {
@@ -91,11 +92,12 @@ public class TopicosController {
 
 	@Transactional
 	@DeleteMapping("/{id}")
+	@CacheEvict(value = "listaDeTopicos", allEntries = true)
 	public ResponseEntity<?> excluir(@PathVariable Long id) {
 		Optional<Topico> optional = topicoRepository.findById(id);
 		if (optional.isPresent()) {
 			topicoRepository.deleteById(id);
-			return ResponseEntity.noContent().build();
+			return ResponseEntity.ok().build();
 		}
 		return ResponseEntity.notFound().build();
 	}
