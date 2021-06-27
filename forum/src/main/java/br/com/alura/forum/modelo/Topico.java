@@ -3,7 +3,6 @@ package br.com.alura.forum.modelo;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -14,6 +13,8 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+
+import org.springframework.data.domain.Page;
 
 import br.com.alura.forum.controller.dto.TopicoDto;
 
@@ -111,8 +112,8 @@ public class Topico {
 	}
 
 	// conversor de entidade para Dto
-	public static List<TopicoDto> converter(List<Topico> topicos) {
-		return topicos.stream().map(TopicoDto::new).collect(Collectors.toList());
+	public static Page<TopicoDto> converter(Page<Topico> topicos) {
+		return topicos.map(TopicoDto::new);
 		// return topicos.stream().map(x -> new
 		// TopicoDto(x)).collect(Collectors.toList());
 	}

@@ -1,13 +1,16 @@
 package br.com.alura.forum.controller;
 
 import java.net.URI;
-import java.util.List;
 import java.util.Optional;
 
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,6 +19,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -30,48 +34,45 @@ import br.com.alura.forum.repository.TopicoRepository;
 @RestController
 @RequestMapping("/topicos")
 public class TopicosController {
-	
+
 	@Autowired
 	private TopicoRepository topicoRepository;
 	@Autowired
 	private CursoRepository coursoRepository;
-	
+
 	@GetMapping
-	public List<TopicoDto> listar(String nomeCurso) {
-		//// lista em memória
-		//Topico topico = new Topico("Dúvida", "Dúvida com Spring", new Curso("Spring", "Programação"));
-		//return Topico.converter(Arrays.asList(topico, topico, topico));
-		
-		//topicos?nomeCurso=HTML%205
+	public Page<TopicoDto> listar(@RequestParam(required = false) String nomeCurso, @RequestParam int pagina,
+			@RequestParam int quantidade, @RequestParam String ordenacao) {
+
+		Pageable paginacao = PageRequest.of(pagina, quantidade, Direction.ASC, ordenacao);
+
 		if (nomeCurso == null) {
-			List<Topico> topicos = topicoRepository.findAll();
+			Page<Topico> topicos = topicoRepository.findAll(paginacao);
 			return Topico.converter(topicos);
 		} else {
-			List<Topico> topicos = topicoRepository.carregarPorNomeDoCurso(nomeCurso);
+			Page<Topico> topicos = topicoRepository.findByCurso_Nome(nomeCurso, paginacao);
 			return Topico.converter(topicos);
 		}
 	}
-	
+
 	@Transactional
 	@PostMapping
 	public ResponseEntity<TopicoDto> cadastar(@RequestBody @Valid TopicoForm form, UriComponentsBuilder uriBuilder) {
 		Topico topico = form.converter(coursoRepository);
 		topicoRepository.save(topico);
-		
+
 		URI uri = uriBuilder.path("/topicos/{id}").buildAndExpand(topico.getId()).toUri();
-		
+
 		return ResponseEntity.created(uri).body(new TopicoDto(topico));
 	}
-	
+
 	@GetMapping("/{id}")
 	public ResponseEntity<TopicoPorIdDto> listarPorId(@PathVariable Long id) {
-		//Optional<Topico> topico = topicoRepository.findById(id);
-		return topicoRepository.findById(id)
-                .map(TopicoPorIdDto::new)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+		// Optional<Topico> topico = topicoRepository.findById(id);
+		return topicoRepository.findById(id).map(TopicoPorIdDto::new).map(ResponseEntity::ok)
+				.orElse(ResponseEntity.notFound().build());
 	}
-	
+
 	@Transactional
 	@PutMapping("/{id}")
 	public ResponseEntity<TopicoDto> atualizar(@PathVariable Long id, @RequestBody @Valid TopicoFormAtalizacao form) {
@@ -82,7 +83,7 @@ public class TopicosController {
 		}
 		return ResponseEntity.notFound().build();
 	}
-	
+
 	@Transactional
 	@DeleteMapping("/{id}")
 	public ResponseEntity<?> excluir(@PathVariable Long id) {
@@ -93,5 +94,5 @@ public class TopicosController {
 		}
 		return ResponseEntity.notFound().build();
 	}
-	
+
 }
